@@ -1,0 +1,29 @@
+{% extends "paginaprincipal.html" %}
+
+{% load static %}
+
+{% block title %}Página de Novios - Momentos Únicos{% endblock %}
+
+{% block header_extras %}
+ <div class="container nav">
+      <div class="logo">
+        <div class="mark">M</div>
+        <div>
+          <div style="font-size:.95rem">Momentos Únicos</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:2px">Celebra de forma simple y sostenible</div>
+        </div>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="http://127.0.0.1:8000/">Inicio</a></li>
+          <li><a href="#">Gestiona tus proveedores de servicios</a></li>
+          <li><a href="#como-funciona">Cómo funciona</a></li>
+          <li><a id="btnContacto">Contactanos</a></li>
+        </ul>
+      </nav>
+{% endblock %}
+
+{% block content %}
+
+<!-- Contenido específico de paginanovios.html aquí -->
+{% endblock %}
