@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'webappaplication',
     'Personas',
+    'momentos_unicos',
 ]
 
 MIDDLEWARE = [

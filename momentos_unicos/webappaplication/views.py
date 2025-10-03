@@ -1,87 +1,80 @@
+
 from django.shortcuts import redirect, render
 from Personas.models import Persona
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from .forms import RegistroNoviosForm
-from django.contrib.auth import authenticate, login as auth_login
-
-# from .forms import PersonaForm
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import login as auth_login, authenticate
 from django.contrib.auth.models import User
-# Create your views here.
-def paginaprincipal (request):
+
+
+# Función auxiliar para redirección por grupo
+def redireccion_por_grupo(user):
+    if user.groups.filter(name='novios').exists():
+        return redirect('pagina_novios')
+    elif user.groups.filter(name='invitados').exists():
+        return redirect('pagina_invitados')
+    else:
+        return redirect('home')
+
+# Vista de login refactorizada
+def login_view(request):
+    print("Entró a login_view")
+    form = AuthenticationForm(request, data=request.POST or None)
+
+    if request.method == 'POST':
+        if form.is_valid():
+            user = form.get_user()
+            auth_login(request, user)
+            print("Usuario autenticado:", user.username)
+            return redireccion_por_grupo(user)
+        else:
+            print("Error de autenticación")
+            return render(request, 'login.html', {'form': form, 'error': 'Credenciales inválidas'})
+
+    return render(request, 'login.html', {'form': form})
+
+# Vista principal
+def paginaprincipal(request):
     return render(request, 'paginaprincipal.html')
 
-def login_page (request):
-    return render(request, 'login.html')
-
-def listarpersonas (request):
+# Vista para listar personas
+def listarpersonas(request):
     personas = Persona.objects.all()
     return render(request, 'listapersonas.html', {'personas': personas})
 
-def paginanovios (request):
-    return render(request, 'paginanovios.html')
-
-
-@login_required
-def redirect_dashboard(request):
-    user = request.user  
-
-    if user.groups.filter(name="novios").exists():
-        return redirect("pagina_novios")
-    elif user.groups.filter(name="invitados").exists():
-        return redirect("pagina_invitados")
-    else:
-        return redirect("home")  # en caso de no estar en un grupo
-
+# Vista protegida para novios
 @login_required
 def pagina_novios(request):
-    return render(request, "paginanovios.html")
+    return render(request, 'paginanovios.html')
 
+# Vista protegida para invitados
 @login_required
 def pagina_invitados(request):
-    return render(request, "paginainvitados.html")
+    return render(request, 'paginainvitados.html')
 
+# Vista para redireccionar según grupo
+@login_required
+def redirect_dashboard(request):
+    return redireccion_por_grupo(request.user)
+
+# Vista de registro para novios
 def registro_novios(request):
     if request.method == "POST":
         form = RegistroNoviosForm(request.POST)
         if form.is_valid():
-            # Guardamos el usuario
-            persona = form.save()  # esto devuelve una Persona con su User
+            persona = form.save()
             user = form.save(commit=False)
-            user.set_password(form.cleaned_data["password1"])  # Hashea la contraseña
+            user.set_password(form.cleaned_data["password1"])
             user.save()
 
-            # Agregar al grupo "novios"
             grupo_novios, created = Group.objects.get_or_create(name="novios")
             user.groups.add(grupo_novios)
 
-            # Iniciar sesión automáticamente
-            login(request, user)
-
-            return redirect("pagina_novios") 
+            auth_login(request, user)
+            return redirect("pagina_novios")
     else:
         form = RegistroNoviosForm()
 
     return render(request, "registro.html", {"form": form})
-
-
-def login(request):
-    if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-
-        user = authenticate(request, username=username, password=password)
-
-        if user is not None:
-            auth_login(request, user)  # Evita conflicto con el nombre de la función
-
-            if user.groups.filter(name="novios").exists():
-                return redirect("paginanovios")  # Asegúrate que esta URL esté registrada
-            elif user.groups.filter(name="invitados").exists():
-                return redirect("pagina_invitados")
-            else:
-                return redirect("home")  # Ruta por defecto si no pertenece a ningún grupo
-
-        else:
-            return render(request, "login.html", {"error": "Usuario o contraseña incorrectos"})
-    return render(request, "login.html")

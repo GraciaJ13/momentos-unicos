@@ -94,10 +94,10 @@
 {% block nav-breadcrumbs %}{% endblock %}
 
 {% block content %}
-   <div id="content-main">
+  <div id="content-main">
     <h1>Iniciar Sesión</h1> 
 
-    <form action="{{ app_path }}" method="post" id="login-form">
+    <form method="post" id="login-form">
       {% csrf_token %}
       <div class="form-row">
         {{ form.username.label_tag }} {{ form.username }}
