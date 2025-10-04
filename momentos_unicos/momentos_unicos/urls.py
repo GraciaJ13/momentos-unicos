@@ -23,6 +23,7 @@ from webappaplication.views import paginaprincipal
 from webappaplication.views import login_view
 from webappaplication.views import listarpersonas
 from django.views.generic import TemplateView
+from webappaplication.views import pagina_novios
 
 
 urlpatterns = [
@@ -31,8 +32,7 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('paginaprincipal/', paginaprincipal),
     path('listapersonas/',listarpersonas),
-    path("redirect-dashboard/", views.redirect_dashboard, name="redirect_dashboard"),
-    path('paginanovios/', TemplateView.as_view(template_name='paginanovios.html'), name='paginanovios'),
+    path('novios/', pagina_novios, name='paginanovios'),
     path('pagina_invitados/', TemplateView.as_view(template_name='pagina_invitados.html'), name='pagina_invitados'),
     path("registro/", views.registro_novios, name="registro_novios"),
 ]   

@@ -8,37 +8,36 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login as auth_login, authenticate
 from django.contrib.auth.models import User
 
-
-# Función auxiliar para redirección por grupo
-def redireccion_por_grupo(user):
-    if user.groups.filter(name='novios').exists():
-        return redirect('pagina_novios')
-    elif user.groups.filter(name='invitados').exists():
-        return redirect('pagina_invitados')
-    else:
-        return redirect('home')
-
-# Vista de login refactorizada
 def login_view(request):
-    form = AuthenticationForm(request, data=request.POST or None)
-    if request.method == 'GET':
-        return render(request, 'login.html', {'form': AuthenticationForm})
-    ##if request.method == 'POST':
-    ##    if form.is_valid():
-    ##        user = form.get_user()
-    ##        auth_login(request, user)
-    ##        print("Usuario autenticado:", user.username)
-    ##        return redireccion_por_grupo(user)
-    ##    else:
-    ##        print("Error de autenticación")
-    ##        return render(request, 'login.html', {'form': form, 'error': 'Credenciales inválidas'})
-    
-    else: 
-        user = authenticate(username=request.POST['username'], password=request.POST['password'])
-        if user is not None:
-            return render(request, 'login.html', {'form': form, 'error': 'Credenciales inválidas'})
+    if request.method == "POST":
+        username = request.POST['username']
+        password = request.POST['password']
 
-    return render(request, 'login.html', {'form': form})
+        # Intentamos autenticar al usuario
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)  # Inicia la sesión
+
+            # Comprobamos a qué grupo pertenece el usuario y redirigimos a una página específica
+            if user.groups.filter(name='admin_group').exists():
+                # Redirigir a una página específica para administradores (cambia esta URL a la que quieras)
+                return redirect('admin_page')  # Redirigir a la página del administrador
+            elif user.groups.filter(name='novios').exists():
+                # Redirigir a una página específica para usuarios (cambia esta URL a la que quieras)
+                return redirect('paginanovios')  # Redirigir a la página del usuario
+            elif user.groups.filter(name='moderator_group').exists():
+                # Redirigir a una página específica para moderadores (cambia esta URL a la que quieras)
+                return redirect('moderator_page')  # Redirigir a la página del moderador
+            else:
+                # Redirigir a la página principal o cualquier otra página predeterminada si no está en un grupo
+                return redirect('home')  # Página de inicio
+
+        else:
+            # Si las credenciales no son correctas
+            return render(request, 'login.html', {'error': 'Credenciales incorrectas'})
+
+    return render(request, 'login.html')
 
 # Vista principal
 def paginaprincipal(request):
@@ -50,7 +49,7 @@ def listarpersonas(request):
     return render(request, 'listapersonas.html', {'personas': personas})
 
 # Vista protegida para novios
-@login_required
+#@login_required
 def pagina_novios(request):
     return render(request, 'paginanovios.html')
 
@@ -60,9 +59,10 @@ def pagina_invitados(request):
     return render(request, 'paginainvitados.html')
 
 # Vista para redireccionar según grupo
-@login_required
-def redirect_dashboard(request):
-    return redireccion_por_grupo(request.user)
+#@login_required
+#def redirect_dashboard(request):
+#    return redireccion_por_grupo(request.user)
+
 
 # Vista de registro para novios
 def registro_novios(request):
