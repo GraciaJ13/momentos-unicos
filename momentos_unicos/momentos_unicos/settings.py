@@ -129,3 +129,6 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+LOGIN_REDIRECT_URL = 'paginanovios'  # o la vista a la que quieras redirigir después del login
+LOGOUT_REDIRECT_URL = 'login'  # después de cerrar sesión
+LOGIN_URL = 'login'
