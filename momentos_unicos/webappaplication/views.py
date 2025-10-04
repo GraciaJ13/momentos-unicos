@@ -20,17 +20,22 @@ def redireccion_por_grupo(user):
 
 # Vista de login refactorizada
 def login_view(request):
-    print("Entró a login_view")
     form = AuthenticationForm(request, data=request.POST or None)
-
-    if request.method == 'POST':
-        if form.is_valid():
-            user = form.get_user()
-            auth_login(request, user)
-            print("Usuario autenticado:", user.username)
-            return redireccion_por_grupo(user)
-        else:
-            print("Error de autenticación")
+    if request.method == 'GET':
+        return render(request, 'login.html', {'form': AuthenticationForm})
+    ##if request.method == 'POST':
+    ##    if form.is_valid():
+    ##        user = form.get_user()
+    ##        auth_login(request, user)
+    ##        print("Usuario autenticado:", user.username)
+    ##        return redireccion_por_grupo(user)
+    ##    else:
+    ##        print("Error de autenticación")
+    ##        return render(request, 'login.html', {'form': form, 'error': 'Credenciales inválidas'})
+    
+    else: 
+        user = authenticate(username=request.POST['username'], password=request.POST['password'])
+        if user is not None:
             return render(request, 'login.html', {'form': form, 'error': 'Credenciales inválidas'})
 
     return render(request, 'login.html', {'form': form})
