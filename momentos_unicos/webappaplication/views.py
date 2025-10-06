@@ -5,7 +5,6 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from .forms import RegistroNoviosForm
 from Personas.models import Persona
-
 # Helper function to check if user is in the 'novios' group
 def is_novios(user):
     return user.groups.filter(name='novios').exists()
@@ -16,36 +15,39 @@ def is_invitados(user):
 
 # Vista de login
 def login_view(request):
-    # Verificamos si es una solicitud POST (formulario de inicio de sesión)
-    if request.method == "POST":
-        username = request.POST['username']
-        password = request.POST['password']
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
 
-        # Intentamos autenticar al usuario
         user = authenticate(request, username=username, password=password)
-
-        # Verificamos si la autenticación es exitosa
         if user is not None:
-            auth_login(request, user)  # Iniciamos sesión con el usuario autenticado
-
-            # Redirigimos según el grupo al que pertenece el usuario
-            if user.groups.filter(name='admin_group').exists():
-                return redirect('admin_page')  # Redirigir a la página del administrador
-            elif user.groups.filter(name='novios').exists():
-                return redirect('paginanovios')  # Redirigir a la página de los novios
-            elif user.groups.filter(name='invitados').exists():
-                return redirect('paginavisitante')  # Redirigir a la página de invitados
+            login(request, user)
+            # Redirección según grupo
+            if user.groups.filter(name='novios').exists():
+                return redirect('paginanovios')
             else:
-                return redirect('paginaprincipal')  # Página predeterminada si no pertenece a ningún grupo
-
+                return redirect('paginaprincipal')
         else:
-            # Si las credenciales son incorrectas, renderizamos el formulario de login con el error
-            messages.error(request, "Credenciales incorrectas")
-            return render(request, 'login.html')
+            messages.error(request, 'Usuario o contraseña incorrectos.')
 
-    # Si es una solicitud GET (solo mostrar el formulario de login)
+    return render(request, 'login.html')
     return render(request, 'login.html')
 
+def grupo_novios_requerido(view_func):
+    decorated_view_func = login_required(
+        user_passes_test(lambda u: u.groups.filter(name='novios').exists())(view_func)
+    )
+    return decorated_view_func
+
+def grupo_novios_requerido(view_func):
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+        if not request.user.groups.filter(name='novios').exists():
+            messages.error(request, "No tienes permiso para acceder a esta página.")
+            return redirect('paginaprincipal')
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 # Vista principal (página de inicio)
 def paginaprincipal(request):
@@ -59,8 +61,7 @@ def listarpersonas(request):
 
 
 # Vista protegida para novios
-@login_required
-@user_passes_test(is_novios)
+@grupo_novios_requerido
 def pagina_novios(request):
     return render(request, 'paginanovios.html')
 
