@@ -14,14 +14,18 @@ def is_invitados(user):
     return user.groups.filter(name='invitados').exists()
 
 # Vista de login
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-
         user = authenticate(request, username=username, password=password)
+
         if user is not None:
-            login(request, user)
+            login_view(request, user)
             # Redirección según grupo
             if user.groups.filter(name='novios').exists():
                 return redirect('paginanovios')
@@ -31,7 +35,7 @@ def login_view(request):
             messages.error(request, 'Usuario o contraseña incorrectos.')
 
     return render(request, 'login.html')
-    return render(request, 'login.html')
+
 
 def grupo_novios_requerido(view_func):
     decorated_view_func = login_required(
