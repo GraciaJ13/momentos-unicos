@@ -1,17 +1,20 @@
 from django.shortcuts import redirect, render
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import RegistroNoviosForm
 from Personas.models import Persona
+from django.contrib.auth.models import Group
 
 # Vista de login
 def login_view(request):
     print(f"Accediendo a login_view, URL solicitada: {request.get_full_path()}")  # Depuración
+    print(f"CSRF Cookie: {request.COOKIES.get('csrftoken')}")  # Depuración
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         print(f"Formulario recibido: {form.data}")  # Depuración
+        print(f"CSRF Token en POST: {request.POST.get('csrfmiddlewaretoken')}")  # Depuración
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
@@ -24,12 +27,20 @@ def login_view(request):
                 if next_url and next_url != '/admin/':  # Evita redirigir exactamente a /admin/
                     print(f"Redirigiendo a next_url: {next_url}")  # Depuración
                     return redirect(next_url)
+                # Prioridad: Admin (is_staff) primero
                 if user.is_staff:
                     print("Redirigiendo a admin")  # Depuración
                     return redirect('admin:index')
-                else:
-                    print("Redirigiendo a paginanovios")  # Depuración
+                # Luego verifica los grupos
+                elif user.groups.filter(name='novios').exists():
+                    print("Redirigiendo a paginanovios (grupo novios)")  # Depuración
                     return redirect('paginanovios')
+                elif user.groups.filter(name='Invitados').exists():
+                    print("Redirigiendo a paginavisitante (grupo Invitados)")  # Depuración
+                    return redirect('paginavisitante')
+                else:
+                    print("Usuario sin grupo definido, redirigiendo a home")  # Depuración
+                    return redirect('home')
             else:
                 print("Autenticación fallida")  # Depuración
                 messages.error(request, 'Usuario o contraseña incorrectos.')
@@ -40,6 +51,12 @@ def login_view(request):
         form = AuthenticationForm()
         print("Método no POST, renderizando login.html con formulario vacío")  # Depuración
     return render(request, 'login.html', {'form': form})
+
+# Vista de logout personalizada
+def logout_view(request):
+    logout(request)
+    messages.success(request, 'Cerraste la sesión.')
+    return render(request, 'logout.html')
 
 # Vista principal (página de inicio)
 def paginaprincipal(request):
@@ -55,7 +72,7 @@ def listarpersonas(request):
 def pagina_novios(request):
     return render(request, 'paginanovios.html')
 
-# Vista protegida para invitados (solo requiere login, sin grupos; puedes eliminarla si no la necesitas)
+# Vista protegida para invitados (solo requiere login, sin grupos)
 @login_required
 def pagina_invitados(request):
     return render(request, 'paginavisitante.html')
@@ -69,6 +86,9 @@ def registro_novios(request):
             user = form.save(commit=False)
             user.set_password(form.cleaned_data["password1"])
             user.save()
+            # Asigna al grupo "novios" al registrarse
+            group_novios, created = Group.objects.get_or_create(name='novios')
+            user.groups.add(group_novios)
             login(request, user)
             return redirect("paginanovios")
     else:

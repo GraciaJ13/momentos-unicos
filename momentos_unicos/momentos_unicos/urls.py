@@ -9,7 +9,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', TemplateView.as_view(template_name='paginaprincipal.html'), name='home'),
     path('login/', views.login_view, name='custom_login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('logout/', views.logout_view, name='custom_logout'), 
     path('paginaprincipal/', paginaprincipal),
     path('listapersonas/', listarpersonas),
     path('novios/', pagina_novios, name='paginanovios'),
