@@ -2,8 +2,10 @@ from django.urls import path
 from webappaplication import views
 from webappaplication.views import paginaprincipal, listarpersonas, pagina_novios
 from django.views.generic import TemplateView
+from django.contrib import admin
 
 urlpatterns = [
+    path('admin/', admin.site.urls),
     path('', TemplateView.as_view(template_name='paginaprincipal.html'), name='home'),
     path('login/', views.login_view, name='custom_login'),
     path('logout/', views.logout_view, name='custom_logout'),

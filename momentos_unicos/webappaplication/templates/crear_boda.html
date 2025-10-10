@@ -1,51 +1,160 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script>{% extends "base.html" %}
+{% extends "paginaprincipal.html" %}
 
 {% block title %}Crear Boda{% endblock %}
 
+{% block header_extras %}
+
+<style>
+  form {
+    width: 350px;
+    margin: 20px auto;
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  }
+
+  form p {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  form label {
+    flex: 1;
+    text-align: right;
+    margin-right: 10px;
+    font-weight: bold;
+  }
+
+  form input[type="text"],
+  form input[type="date"],
+  form input[type="number"] {
+    flex: 2;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  button {
+    display: block;
+    margin: 15px auto 0;
+    padding: 8px 20px;
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background-color: #0b5ed7;
+  }
+
+  h2.form-title {
+    width: 350px;
+    margin: 0 auto 15px;
+    text-align: center;
+  }
+
+</style>
+
+  <div class="container nav">
+    <div class="logo">
+      <div class="mark">M</div>
+      <div>
+        <div style="font-size:.95rem">Momentos Únicos</div>
+        <div style="font-size:.75rem;color:#888;margin-top:2px">Celebra de forma simple y sostenible</div>
+      </div>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="http://127.0.0.1:8000/">Inicio</a></li>
+        <li><a href="#">Gestiona tus proveedores de servicios</a></li>
+        <li><a href="#como-funciona">Cómo funciona</a></li>
+        <li><a id="btnContacto">Contactanos</a></li>
+      </ul>
+    </nav>
+    <a href="{% url 'custom_logout' %}">Cerrar sesión</a>
+  </div>
+{% endblock %}
+
 {% block content %}
-  <h2>Crear Boda</h2>
+  <h2 class= "form-title">Llena la informacion de tu Boda</h2>
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit">Crear</button>
+    <button type="reset">Limpiar</button>
+    <button type="button" onclick="window.location.href='{% url 'paginanovios' %}'">Cancelar</button>
   </form>
+
+
+  <!-- Opcional: Formulario para subir archivo Excel (si lo deseas) 
+  <h3>Subir Detalles de Boda (Excel)</h3>
+  <form id="uploadForm">
+    <input type="file" id="excelFile" accept=".xlsx, .xls">
+    <button type="button" onclick="processExcel()">Procesar</button>
+  </form>
+  <div id="result"></div>
+  -->
+  <!-- Incluir librería XLSX via CDN
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script type="text/javascript">
+    var gk_isXlsx = true;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+
+    function filledCell(cell) {
+      return cell !== '' && cell != null;
+    }
+
+    function loadFileData(filename) {
+      if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+        try {
+          var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+          var firstSheetName = workbook.SheetNames[0];
+          var worksheet = workbook.Sheets[firstSheetName];
+
+          var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+          var filteredData = jsonData.filter(row => row.some(filledCell));
+
+          var headerRowIndex = filteredData.findIndex((row, index) =>
+            row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+          );
+          if (headerRowIndex === -1 || headerRowIndex > 25) {
+            headerRowIndex = 0;
+          }
+
+          var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+          csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+          return csv;
+        } catch (e) {
+          console.error(e);
+          return "";
+        }
+      }
+      return gk_fileData[filename] || "";
+    }
+
+    function processExcel() {
+      var fileInput = document.getElementById('excelFile');
+      var file = fileInput.files[0];
+      if (file) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          var data = e.target.result;
+          var workbook = XLSX.read(data, { type: 'binary' });
+          var firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          var jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+          document.getElementById('result').innerText = JSON.stringify(jsonData, null, 2);
+        };
+        reader.readAsBinaryString(file);
+      } else {
+        alert('Por favor, selecciona un archivo.');
+      }
+    }
+  </script>
+   -->
 {% endblock %}

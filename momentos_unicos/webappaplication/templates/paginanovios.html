@@ -16,31 +16,59 @@
     <nav>
       <ul>
         <li><a href="http://127.0.0.1:8000/">Inicio</a></li>
-        <li><a href="#">Gestiona tus proveedores de servicios</a></li>
         <li><a href="#como-funciona">Cómo funciona</a></li>
         <li><a id="btnContacto">Contactanos</a></li>
       </ul>
     </nav>
-    <p>Esta es la página especial para los novios 💕</p>
+    <p>Bienvenido, {{ user.get_full_name|default:user.username }}!</p>
     <a href="{% url 'custom_logout' %}">Cerrar sesión</a>
   </div>
 {% endblock %}
 
 {% block content %}
   <div class="opciones">
-    <h2>Opciones para Novios</h2>
-    <div class="cuadro">
-      <a href="{% url 'crear_boda' %}">Crear Boda</a>
+    <h2>¡Empieza a crear tu Momento Único!</h2>
+
+    <!-- Carrusel para Ver Proveedores -->
+    <div class="cuadro carousel-container">
+      <a href="{% url 'ver_proveedores' %}">
+        <div class="carousel">
+          <div class="carousel-slide">
+            <!-- Agrega tus imágenes aquí, ejemplo: -->
+            <img src="{% static 'D:\Univesidad\momentos_unicos\momentos-unicos\momentos_unicos\img\' %}" alt="Proveedor 1">
+            <img src="{% static 'D:\Univesidad\momentos_unicos\momentos-unicos\momentos_unicos\img\' %}" alt="Proveedor 2">
+            <img src="{% static 'D:\Univesidad\momentos_unicos\momentos-unicos\momentos_unicos\img\' %}" alt="Proveedor 3">
+            <img src="{% static 'D:\Univesidad\momentos_unicos\momentos-unicos\momentos_unicos\img\' %}" alt="Proveedor 4">
+          </div>
+          <button class="carousel-prev">&#10094;</button>
+          <button class="carousel-next">&#10095;</button>
+        </div>
+        <p>Ver Proveedores</p>
+      </a>
     </div>
+
+    <!-- Carrusel para Crear Boda -->
+    <div class="cuadro carousel-container">
+      <a href="{% url 'crear_boda' %}">
+        <div class="carousel">
+          <div class="carousel-slide">
+            <!-- Agrega tus imágenes aquí, ejemplo: -->
+            <!-- <img src="{% static 'img/boda1.jpg' %}" alt="Boda 1"> -->
+            <!-- <img src="{% static 'img/boda2.jpg' %}" alt="Boda 2"> -->
+          </div>
+          <button class="carousel-prev">&#10094;</button>
+          <button class="carousel-next">&#10095;</button>
+        </div>
+        <p>Crear Boda</p>
+      </a>
+    </div>
+
     {% if has_boda %}
       <div class="cuadro">
         <a href="{% url 'crear_invitados' %}">Crear Lista de Invitados</a>
       </div>
       <div class="cuadro">
         <a href="{% url 'gestion_regalos' %}">Crear Lista de Regalos</a>
-      </div>
-      <div class="cuadro">
-        <a href="{% url 'ver_proveedores' %}">Ver Proveedores</a>
       </div>
       <div class="cuadro">
         <a href="{% url 'agregar_cancion' %}">Agregar Canción (para Invitados)</a>
@@ -62,5 +90,75 @@
         });
       </script>
     {% endif %}
+
+    <!-- Estilos CSS para el carrusel -->
+    <style>
+      .carousel-container {
+        position: relative;
+        width: 100%;
+        max-width: 300px; /* Ajusta según necesites */
+        margin: 10px auto;
+      }
+      .carousel {
+        position: relative;
+        overflow: hidden;
+      }
+      .carousel-slide {
+        display: flex;
+        transition: transform 0.5s ease;
+      }
+      .carousel-slide img {
+        width: 100%;
+        height: auto;
+      }
+      .carousel-prev, .carousel-next {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        padding: 10px;
+        cursor: pointer;
+      }
+      .carousel-prev {
+        left: 0;
+      }
+      .carousel-next {
+        right: 0;
+      }
+      .carousel-prev:hover, .carousel-next:hover {
+        background-color: rgba(0, 0, 0, 0.8);
+      }
+    </style>
+
+    <!-- JavaScript para el carrusel -->
+    <script>
+      let currentSlide = 0;
+      const slides = document.querySelectorAll('.carousel-slide');
+
+      function showSlide(index) {
+        slides.forEach((slide, i) => {
+          slide.style.transform = `translateX(-${index * 100}%)`;
+        });
+      }
+
+      document.querySelectorAll('.carousel-next').forEach(button => {
+        button.addEventListener('click', () => {
+          currentSlide = (currentSlide + 1) % slides.length;
+          showSlide(currentSlide);
+        });
+      });
+
+      document.querySelectorAll('.carousel-prev').forEach(button => {
+        button.addEventListener('click', () => {
+          currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+          showSlide(currentSlide);
+        });
+      });
+
+      // Iniciar con la primera diapositiva
+      showSlide(currentSlide);
+    </script>
   </div>
 {% endblock %}
