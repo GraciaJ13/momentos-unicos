@@ -19,7 +19,6 @@
         <h2>Iniciar Sesión</h2>
         <form method="post" action="{% url 'custom_login' %}">
             {% csrf_token %}
-            <p class="debug">CSRF Token presente: {% if csrf_token %}Sí{% else %}No{% endif %}</p>
             {% if form %}
                 {{ form.as_p }}
             {% else %}

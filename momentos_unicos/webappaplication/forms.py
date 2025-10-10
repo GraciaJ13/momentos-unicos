@@ -4,7 +4,7 @@ from Personas.models import Persona
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.hashers import make_password
-
+from Personas.models import Boda, Proveedor, Invitado, Regalo, Cancion
 class PersonaForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput, label="Contraseña")
 
@@ -60,3 +60,28 @@ class RegistroNoviosForm(forms.ModelForm):
         if commit:
             persona.save()
         return user
+
+class BodaForm(forms.ModelForm):
+    class Meta:
+        model = Boda
+        fields = ['nombre_boda', 'fecha_boda', 'lugar', 'codigo_boda']
+
+class ProveedorForm(forms.ModelForm):
+    class Meta:
+        model = Proveedor
+        fields = ['nombre', 'servicio', 'contacto', 'telefono', 'email', 'url', 'boda']
+
+class InvitadoForm(forms.ModelForm):
+    class Meta:
+        model = Invitado
+        fields = ['nombre', 'email', 'telefono', 'boda', 'invitado_registrado_por', 'regalo']
+
+class RegaloForm(forms.ModelForm):
+    class Meta:
+        model = Regalo
+        fields = ['nombre', 'descripcion', 'precio', 'url', 'estado', 'boda_id']
+
+class CancionForm(forms.ModelForm):
+    class Meta:
+        model = Cancion
+        fields = ['nombre', 'artista', 'invitado', 'boda']

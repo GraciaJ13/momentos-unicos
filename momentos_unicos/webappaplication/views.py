@@ -3,9 +3,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .forms import RegistroNoviosForm
-from Personas.models import Persona
+from .forms import RegistroNoviosForm, RegaloForm
+from Personas.models import Persona, Boda, Regalo, Invitado, Proveedor, Cancion
 from django.contrib.auth.models import Group
+
+# Importa o crea forms para las nuevas funcionalidades (asume que tienes forms.py)
+from .forms import BodaForm, ProveedorForm, InvitadoForm, RegaloForm, CancionForm  # Añade estos forms en forms.py
 
 # Vista de login
 def login_view(request):
@@ -35,8 +38,8 @@ def login_view(request):
                 elif user.groups.filter(name='novios').exists():
                     print("Redirigiendo a paginanovios (grupo novios)")  # Depuración
                     return redirect('paginanovios')
-                elif user.groups.filter(name='Invitados').exists():
-                    print("Redirigiendo a paginavisitante (grupo Invitados)")  # Depuración
+                elif user.groups.filter(name='invitado').exists():
+                    print("Redirigiendo a paginavisitante (grupo invitado)")  # Depuración
                     return redirect('paginavisitante')
                 else:
                     print("Usuario sin grupo definido, redirigiendo a home")  # Depuración
@@ -95,3 +98,75 @@ def registro_novios(request):
         form = RegistroNoviosForm()
 
     return render(request, "registro.html", {"form": form})
+
+# Nuevas vistas para opciones en paginanovios
+@login_required
+def crear_boda(request):
+    if request.method == 'POST':
+        form = BodaForm(request.POST)
+        if form.is_valid():
+            boda = form.save(commit=False)
+            boda.save()
+            messages.success(request, 'Boda creada exitosamente.')
+            return redirect('paginanovios')
+        pass
+        return render(request, 'crear_boda.html')
+    else:
+        form = BodaForm()
+    return render(request, 'crear_boda.html', {'form': form})
+
+@login_required
+def ver_proveedores(request):
+    proveedores = Proveedor.objects.all()  # Ajusta el filtro según la boda del usuario si es necesario
+    return render(request, 'ver_proveedores.html', {'proveedores': proveedores})
+
+@login_required
+def crear_invitados(request):
+    if request.method == 'POST':
+        form = InvitadoForm(request.POST)
+        if form.is_valid():
+            invitado = form.save(commit=False)
+            invitado.save()
+            messages.success(request, 'Lista de invitados actualizada.')
+            return redirect('paginanovios')
+    else:
+        form = InvitadoForm()
+    return render(request, 'crear_invitados.html', {'form': form})
+
+@login_required
+def gestion_regalos(request):
+    regalos = Regalo.objects.all()
+    # Verificar si el usuario tiene una boda
+    if not Boda.objects.filter(usuario=request.user).exists():
+        messages.error(request, "Primero crea tu boda para poder avanzar.")
+        return redirect('novios')  # Redirige a la página de novios con el mensaje
+    if request.method == 'POST':
+        form = RegaloForm(request.POST)
+        if form.is_valid():
+            regalo = form.save(commit=False)
+            regalo.save()
+            messages.success(request, 'Regalo agregado.')
+            return redirect('gestion_regalos')
+    else:
+        form = RegaloForm()
+    return render(request, 'gestion_regalos.html', {'form': form, 'regalos': regalos})
+
+@login_required
+def agregar_cancion(request):
+    if request.method == 'POST':
+        form = CancionForm(request.POST)
+        if form.is_valid():
+            cancion = form.save(commit=False)
+            cancion.save()
+            messages.success(request, 'Canción agregada.')
+            return redirect('paginavisitante')
+    else:
+        form = CancionForm()
+    return render(request, 'agregar_cancion.html', {'form': form})
+
+@login_required
+def novios(request):
+    has_boda = Boda.objects.filter(usuario=request.user).exists()
+    if not has_boda:
+        messages.error(request, "Primero crea tu boda para poder avanzar.")
+    return render(request, 'paginanovios.html', {'has_boda': has_boda})

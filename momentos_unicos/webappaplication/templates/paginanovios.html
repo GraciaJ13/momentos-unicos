@@ -5,29 +5,62 @@
 {% block title %}Página de Novios - Momentos Únicos{% endblock %}
 
 {% block header_extras %}
- <div class="container nav">
-      <div class="logo">
-        <div class="mark">M</div>
-        <div>
-          <div style="font-size:.95rem">Momentos Únicos</div>
-          <div style="font-size:.75rem;color:var(--muted);margin-top:2px">Celebra de forma simple y sostenible</div>
-        </div>
+  <div class="container nav">
+    <div class="logo">
+      <div class="mark">M</div>
+      <div>
+        <div style="font-size:.95rem">Momentos Únicos</div>
+        <div style="font-size:.75rem;color:#888;margin-top:2px">Celebra de forma simple y sostenible</div>
       </div>
-      <nav>
-        <ul>
-          <li><a href="http://127.0.0.1:8000/">Inicio</a></li>
-          <li><a href="#">Gestiona tus proveedores de servicios</a></li>
-          <li><a href="#como-funciona">Cómo funciona</a></li>
-          <li><a id="btnContacto">Contactanos</a></li>
-        </ul>
-      </nav>
-      <body>
-      <p>Esta es la página especial para los novios 💕</p>
-      <a href="{% url 'custom_logout' %}">Cerrar sesión</a>
-</body>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="http://127.0.0.1:8000/">Inicio</a></li>
+        <li><a href="#">Gestiona tus proveedores de servicios</a></li>
+        <li><a href="#como-funciona">Cómo funciona</a></li>
+        <li><a id="btnContacto">Contactanos</a></li>
+      </ul>
+    </nav>
+    <p>Esta es la página especial para los novios 💕</p>
+    <a href="{% url 'custom_logout' %}">Cerrar sesión</a>
+  </div>
 {% endblock %}
 
 {% block content %}
-
-<!-- Contenido específico de paginanovios.html aquí -->
+  <div class="opciones">
+    <h2>Opciones para Novios</h2>
+    <div class="cuadro">
+      <a href="{% url 'crear_boda' %}">Crear Boda</a>
+    </div>
+    {% if has_boda %}
+      <div class="cuadro">
+        <a href="{% url 'crear_invitados' %}">Crear Lista de Invitados</a>
+      </div>
+      <div class="cuadro">
+        <a href="{% url 'gestion_regalos' %}">Crear Lista de Regalos</a>
+      </div>
+      <div class="cuadro">
+        <a href="{% url 'ver_proveedores' %}">Ver Proveedores</a>
+      </div>
+      <div class="cuadro">
+        <a href="{% url 'agregar_cancion' %}">Agregar Canción (para Invitados)</a>
+      </div>
+    {% else %}
+      <!-- Mensaje flotante con JavaScript -->
+      <div id="alertMessage" class="alert" style="display:none; position:fixed; top:20px; right:20px; background-color:#f44336; color:white; padding:10px; border-radius:5px; z-index:1000;">
+        Primero crea tu boda para poder avanzar.
+        <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+      </div>
+      <script>
+        // Mostrar el mensaje flotante si no hay boda
+        document.addEventListener('DOMContentLoaded', function() {
+          var alert = document.getElementById('alertMessage');
+          if (!{{ has_boda|lower }}) {
+            alert.style.display = 'block';
+            setTimeout(function(){ alert.style.display = 'none'; }, 5000); // Ocultar después de 5 segundos
+          }
+        });
+      </script>
+    {% endif %}
+  </div>
 {% endblock %}
