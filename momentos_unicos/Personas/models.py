@@ -14,6 +14,10 @@ class Boda(models.Model):
     fecha_boda = models.DateField(null=False) 
     lugar = models.CharField(max_length=200) 
     codigo_boda = models.CharField(max_length=50, unique=True, null=False)
+    usuario = models.ForeignKey(Persona, on_delete=models.CASCADE, null=True, blank=True)  # Nuevo campo
+
+    def __str__(self):
+        return self.nombre_boda
     
     
 class Regalo(models.Model):
@@ -45,8 +49,10 @@ class Proveedor(models.Model):
     contacto = models.CharField(max_length=100, null=False)
     telefono = models.CharField(max_length=20, null=True)
     email = models.EmailField(max_length=150, null=True)
-    boda = models.ForeignKey(Boda, on_delete=models.CASCADE)
     url = models.CharField(max_length=200, null=True, blank=True)
+    
+    def __str__(self):
+        return self.nombre
     
 class Servicio_proveedor(models.Model):
     nombre = models.CharField(max_length=100, null=False)

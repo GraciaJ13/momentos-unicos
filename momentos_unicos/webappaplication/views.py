@@ -6,9 +6,10 @@ from django.contrib import messages
 from .forms import RegistroNoviosForm, RegaloForm
 from Personas.models import Persona, Boda, Regalo, Invitado, Proveedor, Cancion
 from django.contrib.auth.models import Group
+from django.urls import connection
 
 # Importa o crea forms para las nuevas funcionalidades (asume que tienes forms.py)
-from .forms import BodaForm, ProveedorForm, InvitadoForm, RegaloForm, CancionForm  # Añade estos forms en forms.py
+from .forms import BodaForm, InvitadoForm, RegaloForm, CancionForm  # Añade estos forms en forms.py
 
 # Vista de login
 def login_view(request):
@@ -38,8 +39,8 @@ def login_view(request):
                 elif user.groups.filter(name='novios').exists():
                     print("Redirigiendo a paginanovios (grupo novios)")  # Depuración
                     return redirect('paginanovios')
-                elif user.groups.filter(name='invitado').exists():
-                    print("Redirigiendo a paginavisitante (grupo invitado)")  # Depuración
+                elif user.groups.filter(name='Invitados').exists():
+                    print("Redirigiendo a paginavisitante (grupo Invitados)")  # Depuración
                     return redirect('paginavisitante')
                 else:
                     print("Usuario sin grupo definido, redirigiendo a home")  # Depuración
@@ -115,10 +116,22 @@ def crear_boda(request):
         form = BodaForm()
     return render(request, 'crear_boda.html', {'form': form})
 
+proveedores = Proveedor.objects.all()
+
 @login_required
 def ver_proveedores(request):
-    proveedores = Proveedor.objects.all()  # Ajusta el filtro según la boda del usuario si es necesario
-    return render(request, 'ver_proveedores.html', {'proveedores': proveedores})
+    personas = Persona.objects.all()
+    return render(request, 'listapersonas.html', {'personas': personas})
+
+@login_required
+def eliminar_proveedor(request, proveedor_id):
+    proveedor = Proveedor.objects.filter(id=proveedor_id).first()
+    if proveedor:
+        proveedor.delete()  # Simplificado para permitir eliminación sin restricciones por ahora
+        messages.success(request, 'Proveedor eliminado exitosamente.')
+    else:
+        messages.error(request, 'Proveedor no encontrado.')
+    return redirect('ver_proveedores')
 
 @login_required
 def crear_invitados(request):
@@ -136,10 +149,9 @@ def crear_invitados(request):
 @login_required
 def gestion_regalos(request):
     regalos = Regalo.objects.all()
-    # Verificar si el usuario tiene una boda
-    if not Boda.objects.filter(usuario=request.user).exists():
+    if not Boda.objects.exists():  # Ajuste temporal
         messages.error(request, "Primero crea tu boda para poder avanzar.")
-        return redirect('novios')  # Redirige a la página de novios con el mensaje
+        return redirect('paginanovios')
     if request.method == 'POST':
         form = RegaloForm(request.POST)
         if form.is_valid():
@@ -166,7 +178,7 @@ def agregar_cancion(request):
 
 @login_required
 def novios(request):
-    has_boda = Boda.objects.filter(usuario=request.user).exists()
+    has_boda = Boda.objects.exists()  # Ajuste temporal
     if not has_boda:
         messages.error(request, "Primero crea tu boda para poder avanzar.")
     return render(request, 'paginanovios.html', {'has_boda': has_boda})

@@ -1,52 +1,65 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script>{% extends "paginaprincipal.html.html" %}
+{% extends "paginaprincipal.html" %}
 
 {% block title %}Ver Proveedores{% endblock %}
 
 {% block content %}
-  <h2>Proveedores</h2>
-  <ul>
-    {% for proveedor in proveedores %}
-      <li>{{ proveedor.nombre }} - Servicio: {{ proveedor.servicio }} - Contacto: {{ proveedor.contacto }}</li>
+  <h2>Proveedores Disponibles</h2>
+  
+  <!-- Lista de Proveedores -->
+  {% if proveedores %}
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Servicio</th>
+          <th>Contacto</th>
+          <th>Teléfono</th>
+          <th>Email</th>
+          <th>URL</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for proveedor in proveedores %}
+        <tr>
+          <td>{{ proveedor.id }}</td>
+          <td>{{ proveedor.nombre }}</td>
+          <td>{{ proveedor.servicio }}</td>
+          <td>{{ proveedor.contacto }}</td>
+          <td>{{ proveedor.telefono }}</td>
+          <td>{{ proveedor.email }}</td>
+          <td><a href="{{ proveedor.url }}" target="_blank">{{ proveedor.url }}</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>No hay proveedores disponibles. Verifica la base de datos o añade uno.</p>
+  {% endif %}
+  {% if messages %}
+    {% for message in messages %}
+      <p>{{ message }}</p>
     {% endfor %}
-  </ul>
+  {% endif %}
+
+  <!-- Formulario para añadir proveedor -->
+  <h3>Añadir Nuevo Proveedor</h3>
+  <form method="post" action="">
+    {% csrf_token %}
+    <label for="nombre">Nombre:</label><br>
+    <input type="text" id="nombre" name="nombre" required><br>
+    <label for="servicio">Servicio:</label><br>
+    <input type="text" id="servicio" name="servicio" required><br>
+    <label for="contacto">Contacto:</label><br>
+    <input type="text" id="contacto" name="contacto" required><br>
+    <label for="telefono">Teléfono:</label><br>
+    <input type="text" id="telefono" name="telefono" required><br>
+    <label for="email">Email:</label><br>
+    <input type="email" id="email" name="email" required><br>
+    <label for="url">URL:</label><br>
+    <input type="url" id="url" name="url" required><br>
+    <button type="submit">Añadir Proveedor</button>
+  </form>
+
   <a href="{% url 'paginanovios' %}">Volver</a>
 {% endblock %}

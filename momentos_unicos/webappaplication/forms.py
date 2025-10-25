@@ -69,7 +69,7 @@ class BodaForm(forms.ModelForm):
 class ProveedorForm(forms.ModelForm):
     class Meta:
         model = Proveedor
-        fields = ['nombre', 'servicio', 'contacto', 'telefono', 'email', 'url', 'boda']
+        fields = ['nombre', 'servicio', 'contacto', 'telefono', 'email', 'url']
 
 class InvitadoForm(forms.ModelForm):
     class Meta:
